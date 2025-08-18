@@ -39,7 +39,6 @@ def fetch_flights():
     return data.get("data", [])
 
 
-
 def background_fetch():
 
     global latest_flights
