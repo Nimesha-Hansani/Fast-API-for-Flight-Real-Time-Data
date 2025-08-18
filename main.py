@@ -4,23 +4,33 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import uvicorn
 import requests
+from datetime import datetime, timedelta, timezone
+import json
 
 
-API_KEY = 'b9a99cfbc2971adba7d9b72b3264a66d'  # Use env variable in App Runner
-API_URL = "http://api.aviationstack.com/v1/flights"
-# OFFSET_FILE = "offset.json"
-LIMIT = 5
-# FETCH_INTERVAL = 10 
 
 latest_flights = []
 
+API_KEY = '182b79ca87eb3234b6ff2664e1a7a6dd'  # Use env variable in App Runner
+API_URL = "http://api.aviationstack.com/v1/flights"
+
+
+
+
+#http://api.aviationstack.com/v1/flights?access_key=182b79ca87eb3234b6ff2664e1a7a6dd&updated_after=2025-08-18T17:05:00+00:00
+
+
 def fetch_flights():
 
+ 
+    ten_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=10)
+    updated_after = ten_minutes_ago.strftime("%Y-%m-%dT%H:%M:%S%z")
+    print(updated_after)
     params = {
         "access_key": API_KEY,
-        "limit": LIMIT
+        "updated_after": updated_after
     }
-     
+
     response = requests.get(API_URL, params=params)
     response.raise_for_status()
     data = response.json()
@@ -29,12 +39,24 @@ def fetch_flights():
     return data.get("data", [])
 
 
+
 def background_fetch():
 
-    flights = fetch_flights()
-    latest_flights.extend(flights)
-    
+    global latest_flights
+    # offset = load_offset()
 
+    while True:
+
+        flights = fetch_flights()
+
+        try:
+         if flights:
+                latest_flights = flights  # Replace old data with latest
+                print(f"Fetched {len(flights)} flights at {datetime.now(timezone.utc)}")
+        except Exception as e:
+            print(f"Error fetching flights: {e}")
+
+        time.sleep(300)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
