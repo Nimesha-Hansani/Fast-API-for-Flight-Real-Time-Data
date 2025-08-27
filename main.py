@@ -6,12 +6,13 @@ import uvicorn
 import requests
 from datetime import datetime, timedelta, timezone
 import json
+import os
 
 
 
 latest_flights = []
 
-API_KEY = '182b79ca87eb3234b6ff2664e1a7a6dd'  # Use env variable in App Runner
+API_KEY = os.getenv("API_KEY") # Use env variable in App Runner
 API_URL = "http://api.aviationstack.com/v1/flights"
 
 
